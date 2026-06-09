@@ -9,7 +9,7 @@
 
 **RunwayMap** is a premium, interactive B2B **Finance Operations Cockpit** designed for startup founders, finance teams, and CFOs. It allows companies to map out SaaS stack costs, model headcount expansions, simulate price surges, and perform dynamic A/B stress testing to predict capital efficiency impacts before they happen.
 
-![RunwayMap Cockpit Mockup](assets/mockup.png)
+<!-- Add a screenshot of the app here: ![RunwayMap Cockpit](assets/screenshot.png) -->
 
 ---
 
