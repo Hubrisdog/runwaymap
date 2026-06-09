@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RunwayMap - Map Your SaaS Costs. Protect Your Runway.</title>
+    <meta
+      name="description"
+      content="SaaS cost visualizer and runway simulation tool for startup founders. Visualize monthly burn, model team expansion, and test pricing shocks."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/modern-screenshot@4.6.7/dist/index.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', "sans-serif"],
+            },
+            colors: {
+              slate: {
+                950: "#020617",
+              },
+            },
+            boxShadow: {
+              glow: "0 0 20px rgba(139, 92, 246, 0.15)",
+            }
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="min-h-screen text-slate-100 selection:bg-purple-900/50 selection:text-purple-200">
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Floating Background Blur Animations -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
+      <div class="absolute w-[500px] h-[500px] rounded-full blur-[120px] top-[-10%] left-[-10%] animate-float-slow" style="background-color: var(--glow-1);"></div>
+      <div class="absolute w-[600px] h-[600px] rounded-full blur-[130px] bottom-[-20%] right-[-10%] animate-float-delayed" style="background-color: var(--glow-2);"></div>
+      <div class="absolute w-[400px] h-[400px] rounded-full blur-[100px] top-[40%] left-[50%] -translate-x-1/2 animate-float-medium" style="background-color: var(--glow-3);"></div>
+    </div>
+    
+    <!-- Top Navigation Header -->
+    <header class="border-b border-white/5 bg-slate-950/40 backdrop-blur-md sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <span class="iconify h-6 w-6 text-white" data-icon="ph:fire-bold"></span>
+          </div>
+          <div>
+            <div class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">RunwayMap</div>
+            <div class="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">Protect Your Runway</div>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <!-- Basic / Pro Mode Switcher Toggle -->
+          <div class="flex items-center gap-1 bg-slate-950/45 p-0.5 rounded-xl border border-white/5 font-sans mr-1" id="mode-switcher-container">
+            <button onclick="setDashboardMode('basic')" id="mode-btn-basic" class="px-2.5 py-1.5 text-[9px] font-extrabold rounded-lg transition-all" title="Simpler view for indie hackers/founders">
+              Basic
+            </button>
+            <button onclick="setDashboardMode('pro')" id="mode-btn-pro" class="px-2.5 py-1.5 text-[9px] font-extrabold rounded-lg transition-all" title="Full access view for CFOs/Finance teams">
+              Pro
+            </button>
+          </div>
+          
+          <!-- Role Switcher Button -->
+          <div class="relative mode-pro-only">
+            <button
+              id="role-btn"
+              onclick="toggleRoleMenu()"
+              class="flex h-10 px-3 items-center justify-center rounded-xl border border-white/5 bg-slate-900/40 hover:bg-slate-900 text-slate-400 transition-all gap-1.5"
+              title="Change User View Role"
+            >
+              <span class="iconify h-5 w-5 text-purple-400" data-icon="ph:users-bold"></span>
+              <span class="text-xs font-bold hidden sm:inline" id="current-role-label">CFO Cockpit</span>
+            </button>
+            
+            <!-- Role Dropdown Menu -->
+            <div
+              id="role-menu"
+              class="absolute right-0 mt-2 w-48 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl hidden z-50 pointer-events-auto"
+            >
+              <button
+                type="button"
+                onclick="setRole('cfo')"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <span class="iconify h-4 w-4 text-purple-400" data-icon="ph:briefcase-bold"></span>
+                <span>CFO View (Full)</span>
+              </button>
+              <button
+                type="button"
+                onclick="setRole('ceo')"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <span class="iconify h-4 w-4 text-cyan-400" data-icon="ph:presentation-chart-bold"></span>
+                <span>CEO View (Strategy)</span>
+              </button>
+              <button
+                type="button"
+                onclick="setRole('engineer')"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <span class="iconify h-4 w-4 text-orange-400" data-icon="ph:cpu-bold"></span>
+                <span>Eng Lead (Ops)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Theme Switcher Button -->
+          <div class="relative">
+            <button
+              id="theme-btn"
+              onclick="toggleThemeMenu()"
+              class="flex h-10 px-3 items-center justify-center rounded-xl border border-white/5 bg-slate-900/40 hover:bg-slate-900 text-slate-400 transition-all gap-1.5"
+              title="Change Theme Mode"
+            >
+              <span class="iconify h-5 w-5 text-purple-400" data-icon="ph:palette-bold"></span>
+              <span class="text-xs font-bold hidden sm:inline" id="current-theme-label">Obsidian</span>
+            </button>
+            
+            <!-- Theme Dropdown Menu -->
+            <div
+              id="theme-menu"
+              class="absolute right-0 mt-2 w-48 rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl hidden z-50 pointer-events-auto"
+            >
+              <button
+                type="button"
+                onclick="setTheme('dark')"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <span class="iconify h-4 w-4 text-purple-400" data-icon="ph:moon-stars-bold"></span>
+                <span>Space Obsidian</span>
+              </button>
+              <button
+                type="button"
+                onclick="setTheme('light')"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <span class="iconify h-4 w-4 text-cyan-400" data-icon="ph:sun-bold"></span>
+                <span>Alabaster Light</span>
+              </button>
+              <button
+                type="button"
+                onclick="setTheme('claude')"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <span class="iconify h-4 w-4 text-amber-500" data-icon="ph:notebook-bold"></span>
+                <span>Analyst Mode</span>
+              </button>
+            </div>
+          </div>
+
+          <button
+            id="tour-btn"
+            onclick="startTour()"
+            class="flex h-10 px-3.5 items-center justify-center rounded-xl border border-purple-500/20 bg-purple-950/20 hover:bg-purple-900/40 text-purple-400 transition-all gap-1.5 font-bold text-xs"
+            title="Start Interactive Tour Guide"
+          >
+            <span class="iconify h-5 w-5 text-purple-400 animate-pulse" data-icon="ph:compass-bold"></span>
+            <span class="hidden md:inline">Dashboard Tour</span>
+          </button>
+
+          <button
+            onclick="openSettings()"
+            class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-slate-900/40 hover:bg-slate-900 text-slate-400 transition-colors"
+            title="Settings"
+          >
+            <span class="iconify h-5 w-5" data-icon="ph:gear-bold"></span>
+          </button>
+          <button
+            onclick="exportAsImage()"
+            class="flex items-center gap-1.5 h-10 px-3.5 rounded-xl border border-purple-500/20 bg-purple-950/20 hover:bg-purple-950/40 text-purple-400 text-xs font-bold transition-colors"
+            title="Download PNG Dashboard Chart"
+          >
+            <span class="iconify h-4 w-4" data-icon="ph:image-bold"></span>
+            <span class="hidden sm:inline">Export Chart</span>
+          </button>
+          <button
+            onclick="triggerCFOPrint()"
+            class="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-md shadow-purple-600/10 transition-colors"
+            title="Print or Save CFO PDF Summary"
+          >
+            <span class="iconify h-4 w-4" data-icon="ph:file-pdf-bold"></span>
+            <span>Export CFO PDF</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Workspace -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      
+      <!-- Strategic Positioning Hero Banner -->
+      <div id="strategic-positioning-banner" class="mb-6 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans relative overflow-hidden shadow-glow">
+        <div class="space-y-1 z-10 max-w-2xl">
+          <h1 class="text-base md:text-lg font-black text-slate-100 flex items-center gap-2">
+            <span class="iconify text-purple-400 h-5 w-5 animate-pulse" data-icon="ph:compass-bold"></span>
+            Predict Your Spending Impacts
+          </h1>
+          <p class="text-xs text-slate-300 leading-relaxed font-sans">
+            Before you hire, subscribe, or cut costs, see exactly how it affects your runway. RunwayMap helps startups simulate capital efficiency decisions before they happen.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 z-10">
+          <button onclick="startTour()" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-purple-600/20">
+            <span class="iconify h-4 w-4" data-icon="ph:play-bold"></span>
+            Dashboard Tour
+          </button>
+          <button onclick="setDashboardMode('pro')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 hover:border-white/20 text-slate-300 text-xs font-bold transition-all mode-basic-only">
+            Unlock CFO View
+          </button>
+        </div>
+        <!-- Decorative subtle background glow -->
+        <div class="absolute -right-20 -top-20 w-40 h-40 rounded-full blur-[80px] bg-purple-500/10 pointer-events-none"></div>
+      </div>
+      
+      <!-- Vendor Concentration Warning Banner (Dynamically injected) -->
+      <div id="risk-alert-container" class="mb-6 hidden"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left Sidebar: Controls & Inputs -->
+        <section class="lg:col-span-4 space-y-6">
+          
+          <!-- Startup Stack Templates -->
+          <div id="startup-templates-card" class="glass-card rounded-2xl p-5 role-engineer-hidden">
+            <h3 class="text-sm font-extrabold text-slate-200 uppercase tracking-wider mb-3 flex items-center justify-between">
+              <span class="flex items-center gap-2">
+                <span class="iconify text-cyan-400 h-5 w-5" data-icon="ph:stack-overflow-logo-bold"></span>
+                Startup Stack Templates
+              </span>
+              <button onclick="toggleCardCollapse('startup-templates-card')" class="collapse-btn text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center" title="Minimize Section">
+                <span class="iconify h-4 w-4" data-icon="ph:minus-bold" id="collapse-icon-startup-templates-card"></span>
+              </button>
+            </h3>
+            <div id="startup-templates-card-content" class="card-collapsible-content">
+              <p class="text-xs text-slate-400 mb-4">Click to load common SaaS configurations instantly.</p>
+            
+            <div class="grid grid-cols-3 gap-2">
+              <button
+                onclick="loadStack('solo')"
+                class="preset-stack-btn flex flex-col items-center justify-center p-2.5 rounded-xl border border-white/5 bg-slate-900/40 hover:bg-slate-900 text-center transition-colors group"
+              >
+                <span class="iconify h-6 w-6 text-indigo-400 mb-1 group-hover:scale-110 transition-transform" data-icon="ph:user-bold"></span>
+                <span class="text-[10px] font-bold text-slate-200">Solo Founder</span>
+              </button>
+              <button
+                onclick="loadStack('ai')"
+                class="preset-stack-btn flex flex-col items-center justify-center p-2.5 rounded-xl border border-white/5 bg-slate-900/40 hover:bg-slate-900 text-center transition-colors group"
+              >
+                <span class="iconify h-6 w-6 text-orange-400 mb-1 group-hover:scale-110 transition-transform" data-icon="ph:brain-bold"></span>
+                <span class="text-[10px] font-bold text-slate-200">AI Startup</span>
+              </button>
+              <button
+                onclick="loadStack('agency')"
+                class="preset-stack-btn flex flex-col items-center justify-center p-2.5 rounded-xl border border-white/5 bg-slate-900/40 hover:bg-slate-900 text-center transition-colors group"
+              >
+                <span class="iconify h-6 w-6 text-green-400 mb-1 group-hover:scale-110 transition-transform" data-icon="ph:briefcase-bold"></span>
+                <span class="text-[10px] font-bold text-slate-200">Dev Agency</span>
+              </button>
+            </div>
+            </div>
+          </div>
+
+          <!-- Urgent Renewal Alerts Card (Dynamically updated) -->
+          <div id="urgent-renewals-card" class="glass-card rounded-2xl p-5 glow-orange border-l-4 border-amber-500 hidden space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-extrabold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="iconify text-amber-500 h-5 w-5 animate-pulse" data-icon="ph:warning-bold"></span>
+                Urgent Renewal Alert
+              </h3>
+              <span class="text-[9px] uppercase font-black tracking-wider bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 text-amber-500">Urgent Renewals</span>
+            </div>
+            <p class="text-[10px] text-slate-400 leading-tight" id="urgent-renewals-msg">
+              You have subscriptions that need immediate attention.
+            </p>
+            <div id="urgent-renewals-list" class="space-y-1.5"></div>
+          </div>
+
+          <!-- Active SaaS Items List -->
+          <div id="active-saas-sidebar-card" class="glass-card rounded-2xl p-5">
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="text-sm font-extrabold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <span class="iconify text-emerald-400 h-5 w-5" data-icon="ph:credit-card-bold"></span>
+                Active SaaS Stacks
+              </h3>
+              <div class="flex items-center gap-2">
+                <button
+                  onclick="openModal()"
+                  class="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-0.5 role-ceo-hidden"
+                >
+                  <span class="iconify" data-icon="ph:plus-bold"></span>
+                  Add Item
+                </button>
+                <button onclick="toggleCardCollapse('active-saas-sidebar-card')" class="collapse-btn text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center" title="Minimize Section">
+                  <span class="iconify h-4 w-4" data-icon="ph:minus-bold" id="collapse-icon-active-saas-sidebar-card"></span>
+                </button>
+              </div>
+            </div>
+            
+            <div id="active-saas-sidebar-card-content" class="card-collapsible-content">
+              <div id="sub-list-container" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+            
+            <div class="mt-4 pt-4 border-t border-white/5 flex gap-2 role-ceo-hidden">
+              <button
+                onclick="openBankImport()"
+                class="flex-1 py-2 px-2 rounded-lg border border-white/5 bg-slate-900/30 hover:bg-slate-900 text-[9px] font-bold text-slate-400 flex items-center justify-center gap-1 transition-colors"
+                title="Upload statement CSV"
+              >
+                <span class="iconify" data-icon="ph:file-csv-bold"></span>
+                Bank CSV
+              </button>
+              <button
+                onclick="openPlaidSync()"
+                class="flex-1 py-2 px-2 rounded-lg border border-emerald-500/20 bg-emerald-950/10 hover:bg-emerald-950/30 text-[9px] font-bold text-emerald-400 flex items-center justify-center gap-1 transition-colors"
+                title="Link bank feed"
+              >
+                <span class="iconify" data-icon="ph:swap-bold"></span>
+                Plaid Sync
+              </button>
+              <button
+                onclick="clearAllSubs()"
+                class="py-2 px-2 rounded-lg border border-white/5 bg-red-950/20 hover:bg-red-950/40 text-[9px] font-bold text-red-400 flex items-center justify-center gap-1 transition-colors"
+                title="Reset stack"
+              >
+                <span class="iconify" data-icon="ph:trash-bold"></span>
+                Reset All
+              </button>
+            </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Right Column: Visualizer & Analytics -->
+        <section class="lg:col-span-8 space-y-6">
+          
+        <!-- Executive Overview Layer (4-Column Scorecard Grid) -->
+        <div id="scorecards-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Monthly Burn -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col justify-between font-mono">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-sans">
+              <span class="h-2 w-2 rounded-full bg-red-500 pulse-indicator"></span>
+              Monthly Burn
+            </div>
+            <div class="text-xl sm:text-2xl font-black text-slate-100 mt-2 truncate" id="step-2-total">
+              $0
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1" id="base-burn-subtext">
+              Base: $0/mo
+            </div>
+          </div>
+
+          <!-- Runway remaining -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col justify-between glow-purple font-mono">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-sans">
+              <span class="iconify text-purple-400 h-3.5 w-3.5" data-icon="ph:clock-bold"></span>
+              Runway Remaining
+            </div>
+            <div class="text-xl sm:text-2xl font-black text-purple-400 mt-2 truncate" id="runway-display">
+              0.0 mo
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1" id="runway-subtext">
+              At scaled burn rate
+            </div>
+          </div>
+
+          <!-- Financial Health Score -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col justify-between glow-orange font-mono" id="health-score-card">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-sans">
+              <span class="iconify text-emerald-400 h-3.5 w-3.5" data-icon="ph:heart-beat-bold"></span>
+              Financial Health
+            </div>
+            <div class="text-xl sm:text-2xl font-black text-emerald-400 mt-2 truncate" id="risk-score-display">
+              100/100
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1" id="risk-score-subtext">
+              Optimal
+            </div>
+          </div>
+
+          <!-- Top 3 Cost Drivers -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col justify-between glow-cyan font-mono">
+            <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-sans">
+              <span class="iconify text-cyan-400 h-3.5 w-3.5" data-icon="ph:trend-up-bold"></span>
+              Top Cost Drivers
+            </div>
+            <div class="text-xs font-bold text-slate-200 mt-1.5 space-y-0.5 truncate leading-tight font-sans" id="top-drivers-display">
+              No costs
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1" id="top-drivers-subtext">
+              ARR: $0
+            </div>
+          </div>
+        </div>
+
+        <!-- 12-Month Runway Projection Chart Card (Hero!) -->
+        <div class="glass-card rounded-2xl p-5 glow-purple mt-6" id="cash-flow-chart-card">
+          <h3 class="text-sm font-extrabold text-slate-200 uppercase tracking-wider mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <span class="iconify text-purple-400 h-5 w-5" data-icon="ph:presentation-chart-bold"></span>
+              12-Month Runway Projection
+            </span>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded uppercase font-black tracking-wider">Cash Flow</span>
+              <button onclick="toggleCardCollapse('cash-flow-chart-card')" class="collapse-btn text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center" title="Minimize Section">
+                <span class="iconify h-4 w-4" data-icon="ph:minus-bold" id="collapse-icon-cash-flow-chart-card"></span>
+              </button>
+            </div>
+          </h3>
+          
+          <div id="cash-flow-chart-card-content" class="card-collapsible-content">
+            <!-- Custom responsive SVG Line chart container -->
+            <div class="relative w-full h-[220px]" id="cash-flow-svg-container">
+              <!-- SVG chart will be dynamically injected here -->
+            </div>
+            
+            <div class="flex items-center justify-center gap-6 mt-3 text-[10px] font-bold text-slate-400 font-sans">
+              <div class="flex items-center gap-1.5">
+                <span class="h-2.5 w-5 rounded" style="background: var(--color-purple, #8b5cf6)"></span>
+                <span>Active Model</span>
+              </div>
+              <div id="chart-saved-legend" class="flex items-center gap-1.5 hidden">
+                <span class="h-2.5 w-5 rounded border border-dashed border-slate-500 bg-transparent"></span>
+                <span>Saved Scenarios</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="h-0.5 w-5 border-t border-dashed border-red-500"></span>
+                <span class="text-red-400">Zero Cash Balance</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analyst Notes & Commentary Card -->
+        <div id="analyst-commentary-card" class="glass-card rounded-2xl p-5 glow-orange mt-6 hidden">
+          <h3 class="text-sm font-extrabold text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-2 font-mono">
+            <span class="iconify text-amber-500 h-5 w-5 animate-pulse" data-icon="ph:brain-bold"></span>
+            Analyst Notes & Commentary
+          </h3>
+          <div id="analyst-commentary-content" class="text-xs space-y-3 leading-relaxed font-mono">
+            <!-- Commentary will be dynamically generated by JS -->
+          </div>
+        </div>
+
+        <!-- Scenario Modeling Card (Moved from sidebar) -->
+        <div id="modeling-sliders-card" class="glass-card rounded-2xl p-5 glow-purple mt-6">
+          <h3 class="text-sm font-extrabold text-slate-200 uppercase tracking-wider mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <span class="iconify text-purple-400 h-5 w-5" data-icon="ph:sliders-horizontal-bold"></span>
+              Scenario Modeling
+            </span>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded uppercase font-black tracking-wider">Simulation</span>
+              <button onclick="toggleCardCollapse('modeling-sliders-card')" class="collapse-btn text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center" title="Minimize Section">
+                <span class="iconify h-4 w-4" data-icon="ph:minus-bold" id="collapse-icon-modeling-sliders-card"></span>
+              </button>
+            </div>
+          </h3>
+          
+          <div id="modeling-sliders-card-content" class="card-collapsible-content">
+            <div class="space-y-4">
+              <!-- Starting Cash & Cash Injections -->
+              <div class="grid grid-cols-2 gap-2 role-engineer-hidden">
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label for="starting-cash" class="text-[10px] font-bold text-slate-400">Starting Cash</label>
+                  </div>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] font-extrabold">$</span>
+                    <input
+                      type="number"
+                      id="starting-cash"
+                      value="50000"
+                      oninput="updateStartingCash(this.value)"
+                      class="block w-full rounded-xl border border-white/5 bg-slate-950/50 pl-5 pr-1 py-1.5 text-xs font-semibold text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 font-mono"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <label for="cash-injections" class="text-[10px] font-bold text-slate-400">Cash Injection</label>
+                    <span id="injection-consequence" class="text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1 py-0.2 rounded hidden"></span>
+                  </div>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] font-extrabold">$</span>
+                    <input
+                      type="number"
+                      id="cash-injections"
+                      value="0"
+                      oninput="updateCashInjections(this.value)"
+                      class="block w-full rounded-xl border border-white/5 bg-slate-950/50 pl-5 pr-1 py-1.5 text-xs font-semibold text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- What-If Team Size -->
+              <div class="role-engineer-hidden">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-xs font-bold text-slate-400 flex items-center gap-1">
+                    Scale Team Seats
+                    <span class="iconify text-slate-500 hover:text-slate-300 cursor-help text-[10px]" data-icon="ph:info-bold" title="Adds seats to SaaS marked 'Priced Per Seat' dynamically."></span>
+                  </span>
+                  <div class="flex items-center gap-1.5">
+                    <span id="team-consequence" class="text-[8px] font-bold text-red-400 bg-red-500/10 px-1 py-0.2 rounded hidden"></span>
+                    <span class="text-xs font-black text-purple-400" id="team-value">+0 employees</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="team-slider"
+                  min="0"
+                  max="30"
+                  value="0"
+                  oninput="updateTeamScale(this.value)"
+                />
+              </div>
+
+              <!-- Projected Hires & Salary (Pro Mode only) -->
+              <div class="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950/25 border border-white/5 role-engineer-hidden mode-pro-only">
+                <div class="col-span-2 flex justify-between items-center border-b border-white/5 pb-1">
+                  <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider font-mono">Hiring Pipeline (Non-SaaS)</span>
+                  <span id="hiring-consequence" class="text-[8px] font-bold text-red-400 bg-red-500/10 px-1 py-0.2 rounded hidden"></span>
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-0.5">
+                    <label for="projected-hires" class="text-[8px] font-bold text-slate-400">Headcount</label>
+                    <span class="text-[9px] font-black text-purple-400 font-mono" id="hires-value">+0</span>
+                  </div>
+                  <input
+                    type="range"
+                    id="projected-hires"
+                    min="0"
+                    max="10"
+                    value="0"
+                    oninput="updateProjectedHires(this.value)"
+                    class="w-full"
+                  />
+                </div>
+                <div>
+                  <div class="flex justify-between items-center mb-0.5">
+                    <label for="average-salary" class="text-[8px] font-bold text-slate-400">Avg Monthly Salary</label>
+                  </div>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-[10px] font-extrabold">$</span>
+                    <input
+                      type="number"
+                      id="average-salary"
+                      value="5000"
+                      step="500"
+                      oninput="updateAverageSalary(this.value)"
+                      class="block w-full rounded-xl border border-white/5 bg-slate-950/50 pl-5 pr-1 py-1.5 text-xs font-semibold text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Price Shock/Surge Simulator (Pro Mode only) -->
+              <div class="mode-pro-only">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-xs font-bold text-slate-400 flex items-center gap-1">
+                    API / Infra Surge
+                    <span class="iconify text-slate-500 hover:text-slate-300 cursor-help text-[10px]" data-icon="ph:info-bold" title="Models usage surges (+50% to +150%) on Infrastructure & AI categories."></span>
+                  </span>
+                  <div class="flex items-center gap-1.5">
+                    <span id="surge-consequence" class="text-[8px] font-bold text-red-400 bg-red-500/10 px-1 py-0.2 rounded hidden"></span>
+                    <span class="text-xs font-black text-orange-400" id="surge-value">1.0x (Normal)</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  id="surge-slider"
+                  min="1.0"
+                  max="2.5"
+                  step="0.1"
+                  value="1.0"
+                  oninput="updateSurgeScale(this.value)"
+                />
+              </div>
+
+              <!-- Scenario Manager (Pro Mode only) -->
+              <div class="border-t border-white/5 pt-4 mt-4 space-y-3 role-engineer-hidden mode-pro-only">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider font-mono">A/B Scenarios</span>
+                  <button onclick="toggleCompareDrawer()" class="text-[9px] font-bold text-purple-400 hover:text-purple-300 flex items-center gap-0.5">
+                    <span class="iconify" data-icon="ph:scales-bold"></span>
+                    Compare matrix
+                  </button>
+                </div>
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    id="scenario-name-input"
+                    placeholder="Scenario Name (e.g. Lean Run)"
+                    class="block w-full flex-1 rounded-xl border border-white/5 bg-slate-950/50 px-2.5 py-1.5 text-[10px] text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30 placeholder:text-slate-600 font-sans"
+                  />
+                  <button
+                    onclick="saveCurrentScenario()"
+                    class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-black transition-all shrink-0"
+                  >
+                    Save
+                  </button>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="relative flex-1">
+                    <select
+                      id="scenario-selector"
+                      onchange="loadScenario(this.value)"
+                      class="block w-full appearance-none rounded-xl border border-white/5 bg-slate-950/50 p-2 text-[10px] font-semibold text-slate-100 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+                    >
+                      <option value="">-- Load Scenario --</option>
+                    </select>
+                    <span
+                      class="iconify pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500"
+                      data-icon="ph:caret-down-bold"
+                    ></span>
+                  </div>
+                  <button
+                    onclick="deleteSelectedScenario()"
+                    class="p-2 rounded-xl border border-white/5 bg-red-950/20 hover:bg-red-950/40 text-red-400 transition-colors"
+                    title="Delete Scenario"
+                  >
+                    <span class="iconify h-3.5 w-3.5" data-icon="ph:trash-bold"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cost Optimization Engine Card -->
+        <div id="optimization-recommendations-card" class="glass-card rounded-2xl p-5 glow-purple mt-6">
+          <h3 class="text-sm font-extrabold text-slate-200 uppercase tracking-wider mb-4 flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <span class="iconify text-emerald-400 h-5 w-5 animate-pulse" data-icon="ph:sparkle-bold"></span>
+              Cost Optimization Engine
+            </span>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded uppercase font-black tracking-wider" id="optimization-savings-value">$0/year</span>
+              <button onclick="toggleCardCollapse('optimization-recommendations-card')" class="collapse-btn text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center" title="Minimize Section">
+                <span class="iconify h-4 w-4" data-icon="ph:minus-bold" id="collapse-icon-optimization-recommendations-card"></span>
+              </button>
+            </div>
+          </h3>
+          
+          <div id="optimization-recommendations-card-content" class="card-collapsible-content">
+            <div id="optimization-recommendations-list" class="space-y-1.5">
+              <div class="text-[10px] text-slate-500 text-center py-4">No active suggestions. Audit running...</div>
+            </div>
+          </div>
+        </div>
+
+          <!-- Visualizer Card Block -->
+          <div class="glass-card rounded-3xl p-5 glow-cyan" id="export-container">
+            <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
+              <!-- View Toggles -->
+              <div class="view-toggles-container inline-flex rounded-xl p-1">
+                <button
+                  id="view-treemap"
+                  onclick="setView('treemap')"
+                  class="view-toggle-btn flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all active"
+                >
+                  <span class="iconify h-4 w-4" data-icon="ph:grid-four-bold"></span>
+                  Treemap
+                </button>
+                <button
+                  id="view-circlepack"
+                  onclick="setView('circlepack')"
+                  class="view-toggle-btn flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all mode-pro-only"
+                >
+                  <span class="iconify h-4 w-4" data-icon="ph:circles-three-bold"></span>
+                  Bubbles
+                </button>
+                <button
+                  id="view-beeswarm"
+                  onclick="setView('beeswarm')"
+                  class="view-toggle-btn flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all mode-pro-only"
+                >
+                  <span class="iconify h-4 w-4" data-icon="ph:dots-six-bold"></span>
+                  Swarm
+                </button>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <!-- Active Currency Code Indicator -->
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-widest" id="active-currency-indicator">
+                  USD ($)
+                </span>
+                <button onclick="toggleCardCollapse('export-container')" class="collapse-btn text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center" title="Minimize Section">
+                  <span class="iconify h-4 w-4" data-icon="ph:minus-bold" id="collapse-icon-export-container"></span>
+                </button>
+              </div>
+            </div>
+ 
+            <div id="export-container-content" class="card-collapsible-content">
+              <!-- Visualization Containers -->
+              <div id="bento-grid" class="treemap-container bg-slate-950/30 rounded-2xl"></div>
+              <div id="beeswarm-container" class="treemap-container bg-slate-950/30 rounded-2xl hidden relative"></div>
+              <div id="circlepack-container" class="treemap-container bg-slate-950/30 rounded-2xl hidden relative"></div>
+            </div>
+          </div>
+
+
+
+          <!-- Operations & Analytics Hub -->
+          <div id="operations-hub-card" class="glass-card rounded-2xl p-5 glow-purple mt-6">
+            <div class="flex items-center justify-between border-b border-white/5 pb-3 mb-4 flex-wrap gap-2">
+              <h3 class="text-xs font-extrabold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <span class="iconify text-purple-400 h-5 w-5" data-icon="ph:chart-bar-fill-bold"></span>
+                Operations & Analytics Hub
+              </h3>
+              
+              <div class="flex items-center gap-3">
+                <!-- Tab Controls -->
+                <div class="inline-flex rounded-lg bg-slate-950/30 p-0.5 border border-white/5 mode-pro-only" id="hub-tabs">
+                <button
+                  id="tab-btn-analytics"
+                  onclick="setHubTab('analytics')"
+                  class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all active bg-purple-600 text-white"
+                >
+                  Analytics
+                </button>
+                <button
+                  id="tab-btn-calendar"
+                  onclick="setHubTab('calendar')"
+                  class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all text-slate-400 hover:text-slate-200 mode-pro-only"
+                >
+                  Calendar
+                </button>
+                <button
+                  id="tab-btn-alerts"
+                  onclick="setHubTab('alerts')"
+                  class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all text-slate-400 hover:text-slate-200 mode-pro-only"
+                >
+                  Alerts Sim
+                </button>
+                <button
+                  id="tab-btn-departments"
+                  onclick="setHubTab('departments')"
+                  class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all text-slate-400 hover:text-slate-200 mode-pro-only"
+                >
+                  Departments
+                </button>
+              </div>
+              <button onclick="toggleCardCollapse('operations-hub-card')" class="collapse-btn text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center" title="Minimize Section">
+                <span class="iconify h-4 w-4" data-icon="ph:minus-bold" id="collapse-icon-operations-hub-card"></span>
+              </button>
+            </div>
+            </div>
+
+            <div id="operations-hub-card-content" class="card-collapsible-content">
+              <!-- Tab 1: Analytics Content -->
+              <div id="hub-content-analytics" class="hub-content-section space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Budget Settings & Savings -->
+                <div class="space-y-4">
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="text-xs font-bold text-slate-400">Monthly Burn Budget Limit</span>
+                      <span class="text-xs font-black text-purple-400" id="hub-budget-value">$1,000</span>
+                    </div>
+                    <input
+                      type="range"
+                      id="hub-budget-slider"
+                      min="100"
+                      max="10000"
+                      step="100"
+                      value="1000"
+                      oninput="updateHubBudget(this.value)"
+                      class="w-full"
+                    />
+                    <div class="w-full bg-slate-950/40 rounded-full h-2 mt-2 relative overflow-hidden border border-white/5">
+                      <div id="hub-budget-progress" class="bg-gradient-to-r from-emerald-500 to-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-slate-500 mt-1 font-bold">
+                      <span id="hub-budget-spent">$0 used</span>
+                      <span id="hub-budget-warning" class="text-amber-500 animate-pulse hidden">Budget Warning!</span>
+                    </div>
+                  </div>
+                  
+                  <div class="p-3 rounded-xl bg-slate-950/20 border border-white/5 space-y-1">
+                    <div class="flex justify-between text-xs font-bold text-slate-300">
+                      <span>Potential Savings</span>
+                      <span class="text-emerald-400" id="hub-savings-value">$0/year</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500" id="hub-savings-tip">Add overlapping SaaS items to calculate optimizations.</p>
+                  </div>
+                </div>
+                
+                <!-- Category Breakdown -->
+                <div class="p-3 rounded-xl bg-slate-950/20 border border-white/5">
+                  <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2.5">Category Cost share</h4>
+                  <div id="hub-category-list" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 2: Calendar Content -->
+            <div id="hub-content-calendar" class="hub-content-section hidden space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <!-- Left: Calendar Grid -->
+                <div class="md:col-span-7">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-300" id="calendar-month-year">June 2026</span>
+                    <div class="flex gap-1">
+                      <button onclick="changeCalendarMonth(-1)" class="p-1 rounded bg-slate-950/40 border border-white/5 text-slate-400 hover:text-slate-200"><span class="iconify h-3.5 w-3.5" data-icon="ph:caret-left-bold"></span></button>
+                      <button onclick="changeCalendarMonth(1)" class="p-1 rounded bg-slate-950/40 border border-white/5 text-slate-400 hover:text-slate-200"><span class="iconify h-3.5 w-3.5" data-icon="ph:caret-right-bold"></span></button>
+                    </div>
+                  </div>
+                  <!-- Days Grid -->
+                  <div class="grid grid-cols-7 gap-1 text-center text-[8px] font-black text-slate-500 uppercase mb-1">
+                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                  </div>
+                  <div id="calendar-days" class="grid grid-cols-7 gap-1"></div>
+                </div>
+                <!-- Right: Selected Day Events -->
+                <div class="md:col-span-5 p-3 rounded-xl bg-slate-950/20 border border-white/5 flex flex-col justify-between">
+                  <div>
+                    <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2" id="calendar-day-title">Select a day</h4>
+                    <div id="calendar-day-events" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                      <div class="text-[10px] text-slate-500 text-center py-6">Click a calendar day with a colored dot to view renewals.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 3: Alerts Simulator Content -->
+            <div id="hub-content-alerts" class="hub-content-section hidden space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <!-- Left: Channel Selector -->
+                <div class="md:col-span-4 space-y-3">
+                  <div class="text-xs font-bold text-slate-400">Select Alert Channel</div>
+                  <div class="flex flex-col gap-2">
+                    <button id="sim-btn-email" onclick="setAlertSimChannel('email')" class="py-2.5 px-3 rounded-xl border border-white/5 bg-slate-900/40 text-left text-xs font-bold flex items-center gap-2 text-purple-400 border-purple-500/30">
+                      <span class="iconify text-base" data-icon="ph:envelope-simple-bold"></span>
+                      Email Notification
+                    </button>
+                    <button id="sim-btn-push" onclick="setAlertSimChannel('push')" class="py-2.5 px-3 rounded-xl border border-white/5 bg-slate-900/40 text-left text-xs font-bold flex items-center gap-2 text-slate-400">
+                      <span class="iconify text-base" data-icon="ph:device-mobile-bold"></span>
+                      Mobile Push Notification
+                    </button>
+                    <button id="sim-btn-slack" onclick="setAlertSimChannel('slack')" class="py-2.5 px-3 rounded-xl border border-white/5 bg-slate-900/40 text-left text-xs font-bold flex items-center gap-2 text-slate-400">
+                      <span class="iconify text-base" data-icon="ph:slack-logo-bold"></span>
+                      Slack Webhook Alert
+                    </button>
+                  </div>
+                  <div id="alerts-sim-metrics" class="space-y-2 pt-2 border-t border-white/5"></div>
+                </div>
+                
+                <!-- Right: Mock View Frame -->
+                <div class="md:col-span-8 p-3 rounded-xl bg-slate-950/30 border border-white/5 flex items-center justify-center min-h-[160px]">
+                  <div id="sim-display-container" class="w-full"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 4: Departments Content -->
+            <div id="hub-content-departments" class="hub-content-section hidden space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-3 rounded-xl bg-slate-950/20 border border-white/5">
+                  <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Cost breakdown per Department</h4>
+                  <div id="hub-department-list" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-950/20 border border-white/5 flex flex-col justify-between">
+                  <div>
+                    <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Department Budget Caps</h4>
+                    <div id="hub-department-caps-inputs" class="space-y-2.5 max-h-40 overflow-y-auto pr-1">
+                      <!-- Inputs for budgets will be dynamically generated -->
+                    </div>
+                  </div>
+                  <div id="hub-department-insight" class="text-[9px] text-slate-400 font-bold bg-purple-500/5 border border-purple-500/10 p-2 rounded-lg mt-3">
+                    Engineering is currently the highest spending department.
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+
+          <!-- Presets quick catalog browse -->
+          <div id="quick-add-presets-card" class="glass-card rounded-2xl p-5 role-ceo-hidden role-engineer-hidden">
+            <div class="mb-4 flex items-center justify-between">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Quick Add SaaS Vendors</h4>
+              <button onclick="openPresetsBrowser()" class="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-0.5">
+                Browse catalog
+                <span class="iconify h-3.5 w-3.5" data-icon="ph:caret-right-bold"></span>
+              </button>
+            </div>
+            <div class="grid grid-cols-4 gap-2 sm:grid-cols-6" id="presets-grid"></div>
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Modal Backdrop -->
+    <div
+      id="modal-backdrop"
+      class="fixed inset-0 z-50 hidden bg-slate-950/60 opacity-0 backdrop-blur-sm transition-opacity duration-300"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Add/Edit Subscription Modal -->
+    <div
+      id="modal-panel"
+      class="pointer-events-none fixed inset-0 z-50 flex hidden items-end justify-center sm:items-center sm:p-4"
+    >
+      <div
+        class="pointer-events-auto flex max-h-[90vh] w-full translate-y-full transform flex-col overflow-hidden rounded-t-3xl bg-slate-900 border border-white/10 opacity-0 shadow-2xl transition-all duration-300 sm:max-w-lg sm:translate-y-10 sm:scale-95 sm:rounded-3xl"
+      >
+        <div class="flex shrink-0 items-center justify-between border-b border-white/5 bg-slate-950/50 p-5">
+          <h3 class="text-md font-bold text-slate-100" id="modal-title">
+            Add SaaS Expense
+          </h3>
+          <button
+            onclick="closeModal()"
+            class="rounded-lg bg-white/5 p-2 text-slate-400 transition-colors hover:text-slate-200"
+          >
+            <span class="iconify h-5 w-5" data-icon="ph:x-bold"></span>
+          </button>
+        </div>
+
+        <form
+          id="sub-form"
+          onsubmit="handleFormSubmit(event)"
+          class="space-y-4 overflow-y-auto bg-slate-900 p-6"
+        >
+          <input type="hidden" id="entry-id" />
+
+          <!-- URL / website -->
+          <div>
+            <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Website URL (Optional)</label>
+            <div class="flex gap-3">
+              <input
+                type="text"
+                id="url"
+                placeholder="e.g. vercel.com"
+                oninput="updateFavicon(this.value)"
+                class="block w-full flex-1 rounded-xl border border-white/5 bg-slate-950/50 p-3 text-sm font-semibold text-slate-100 placeholder:text-slate-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+              />
+              <div
+                id="favicon-preview"
+                class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-slate-950/30"
+              >
+                <span class="iconify h-5 w-5 text-slate-600" data-icon="ph:globe-simple"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Service Name -->
+          <div>
+            <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">SaaS Vendor Name</label>
+            <input
+              type="text"
+              id="name"
+              required
+              placeholder="e.g. AWS"
+              class="block w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-sm font-semibold text-slate-100 placeholder:text-slate-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+            />
+          </div>
+
+          <!-- Price & Currency -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Monthly Price</label>
+              <input
+                type="number"
+                id="price"
+                required
+                step="0.01"
+                placeholder="0.00"
+                class="block w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-sm font-semibold text-slate-100 placeholder:text-slate-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+              />
+            </div>
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Currency</label>
+              <div class="relative">
+                <select
+                  id="sub-currency"
+                  class="block w-full appearance-none rounded-xl border border-white/5 bg-slate-950/50 p-3 text-sm font-semibold text-slate-100 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+                ></select>
+                <span
+                  class="iconify pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                  data-icon="ph:caret-down-bold"
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seat-Based Switch & Category -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Category</label>
+              <div class="relative">
+                <select
+                  id="category"
+                  class="block w-full appearance-none rounded-xl border border-white/5 bg-slate-950/50 p-3 text-sm font-semibold text-slate-100 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+                >
+                  <option value="Infrastructure">Infrastructure</option>
+                  <option value="AI / API">AI / API</option>
+                  <option value="Dev Tools">Dev Tools</option>
+                  <option value="Collaboration">Collaboration</option>
+                  <option value="Security / Ops">Security / Ops</option>
+                  <option value="Marketing / Sales">Marketing / Sales</option>
+                </select>
+                <span
+                  class="iconify pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                  data-icon="ph:caret-down-bold"
+                ></span>
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between rounded-xl border border-white/5 bg-slate-950/20 p-3 mt-1 sm:mt-0">
+              <div>
+                <div class="text-xs font-bold text-slate-300">Priced Per Seat?</div>
+                <div class="text-[9px] text-slate-500">Scales with Team Size</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="is-seat-based" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Billing Cycle & Billing Start Date -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Billing Cycle</label>
+              <div class="relative">
+                <select
+                  id="cycle"
+                  class="block w-full appearance-none rounded-xl border border-white/5 bg-slate-950/50 p-3 text-sm font-semibold text-slate-100 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+                >
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly" selected>Monthly</option>
+                  <option value="Yearly">Yearly</option>
+                </select>
+                <span
+                  class="iconify pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                  data-icon="ph:caret-down-bold"
+                ></span>
+              </div>
+            </div>
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Renewal Date</label>
+              <input
+                type="date"
+                id="date"
+                required
+                class="block w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-sm font-semibold text-slate-100 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+              />
+            </div>
+          </div>
+
+          <!-- Owner, Department & Card/Funding Source -->
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Owner</label>
+              <input
+                type="text"
+                id="owner"
+                placeholder="e.g. CTO"
+                class="block w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-xs font-semibold text-slate-100 placeholder:text-slate-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+              />
+            </div>
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Department</label>
+              <div class="relative">
+                <select
+                  id="department"
+                  class="block w-full appearance-none rounded-xl border border-white/5 bg-slate-950/50 p-3 text-xs font-semibold text-slate-100 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+                >
+                  <option value="Engineering">Engineering</option>
+                  <option value="Product">Product</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Operations">Operations</option>
+                  <option value="Sales">Sales</option>
+                </select>
+                <span
+                  class="iconify pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500"
+                  data-icon="ph:caret-down-bold"
+                ></span>
+              </div>
+            </div>
+            <div>
+              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">Card Source</label>
+              <input
+                type="text"
+                id="funding"
+                placeholder="e.g. Brex"
+                class="block w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-xs font-semibold text-slate-100 placeholder:text-slate-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+              />
+            </div>
+          </div>
+
+          <!-- Colors palette selection (Custom Card Override) -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Custom Card Color Override</label>
+            <div class="grid grid-cols-5 sm:grid-cols-10 gap-2" id="color-selector"></div>
+            <input type="hidden" id="selected-color" value="" />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full rounded-xl bg-purple-600 hover:bg-purple-500 py-3.5 font-bold text-white shadow-lg shadow-purple-600/20 transition-all active:scale-[0.98] mt-2"
+          >
+            Save Item
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Settings Backdrop -->
+    <div
+      id="settings-backdrop"
+      class="fixed inset-0 z-50 hidden bg-slate-950/60 opacity-0 backdrop-blur-sm transition-opacity duration-300"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Settings Modal -->
+    <div
+      id="settings-panel"
+      class="pointer-events-none fixed inset-0 z-50 flex hidden items-end justify-center sm:items-center sm:p-4"
+    >
+      <div
+        class="pointer-events-auto flex max-h-[85vh] w-full translate-y-full transform flex-col overflow-hidden rounded-t-3xl bg-slate-900 border border-white/10 opacity-0 shadow-2xl transition-all duration-300 sm:max-w-md sm:translate-y-10 sm:scale-95 sm:rounded-3xl"
+      >
+        <div class="flex shrink-0 items-center justify-between border-b border-white/5 bg-slate-950/50 p-5">
+          <h3 class="text-md font-bold text-slate-100">Global Settings</h3>
+          <button
+            onclick="closeSettings()"
+            class="rounded-lg bg-white/5 p-2 text-slate-400 transition-colors hover:text-slate-200"
+          >
+            <span class="iconify h-5 w-5" data-icon="ph:x-bold"></span>
+          </button>
+        </div>
+
+        <div class="overflow-y-auto bg-slate-900 p-6 space-y-6">
+          <div>
+            <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">Display Currency</label>
+            <div class="relative">
+              <select
+                id="currency-selector"
+                class="block w-full appearance-none rounded-xl border border-white/5 bg-slate-950/50 p-3.5 text-sm font-semibold text-slate-100 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+              ></select>
+              <span
+                class="iconify pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
+                data-icon="ph:caret-down-bold"
+              ></span>
+            </div>
+            <p class="mt-2 text-[10px] text-slate-500">
+              Foreign subscriptions are calculated using cached exchange rates.
+            </p>
+          </div>
+
+          <div class="border-t border-white/5 pt-6">
+            <label class="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+              Import & Export Backup
+            </label>
+            <p class="mb-4 text-xs text-slate-500">
+              Download your RunwayMap settings or restore them on another device.
+            </p>
+            <div class="flex gap-3">
+              <button
+                onclick="exportData()"
+                class="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 hover:bg-slate-950 py-3 font-semibold text-slate-300 transition-colors"
+              >
+                <span class="iconify h-5 w-5 text-purple-400" data-icon="ph:download-simple-bold"></span>
+                Export
+              </button>
+              <label
+                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 hover:bg-slate-950 py-3 font-semibold text-slate-300 transition-colors"
+              >
+                <span class="iconify h-5 w-5 text-cyan-400" data-icon="ph:upload-simple-bold"></span>
+                Import
+                <input type="file" accept=".json" onchange="importData(event)" class="hidden" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Presets Modal Backdrop -->
+    <div
+      id="presets-backdrop"
+      class="fixed inset-0 z-50 hidden bg-slate-950/60 opacity-0 backdrop-blur-sm transition-opacity duration-300"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Presets Selector Modal -->
+    <div
+      id="presets-panel"
+      class="pointer-events-none fixed inset-0 z-50 flex hidden items-end justify-center sm:items-center sm:p-4"
+    >
+      <div
+        class="pointer-events-auto flex max-h-[90vh] w-full translate-y-full transform flex-col overflow-hidden rounded-t-3xl bg-slate-900 border border-white/10 opacity-0 shadow-2xl transition-all duration-300 sm:max-w-lg sm:translate-y-10 sm:scale-95 sm:rounded-3xl"
+      >
+        <div class="flex shrink-0 items-center justify-between border-b border-white/5 bg-slate-950/50 p-5">
+          <h3 class="text-md font-bold text-slate-100">Add from SaaS Catalog</h3>
+          <button
+            onclick="closePresetsBrowser()"
+            class="rounded-lg bg-white/5 p-2 text-slate-400 transition-colors hover:text-slate-200"
+          >
+            <span class="iconify h-5 w-5" data-icon="ph:x-bold"></span>
+          </button>
+        </div>
+
+        <div class="border-b border-white/5 bg-slate-950/20 px-5 py-3">
+          <div class="relative">
+            <span class="iconify absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-600" data-icon="ph:magnifying-glass"></span>
+            <input
+              type="text"
+              id="presets-search"
+              placeholder="Search SaaS vendor..."
+              oninput="filterPresets(this.value)"
+              class="w-full rounded-xl border border-white/5 bg-slate-950/50 py-2.5 pl-10 pr-4 text-sm font-semibold text-slate-100 placeholder:text-slate-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/30"
+            />
+          </div>
+          <div class="mt-3 flex flex-wrap gap-1.5" id="category-filters"></div>
+        </div>
+
+        <div class="overflow-y-auto bg-slate-900 p-5" id="presets-browser-list" style="max-height: 50vh;"></div>
+      </div>
+    </div>
+
+    <!-- Bank Import Backdrop -->
+    <div
+      id="bank-import-backdrop"
+      class="fixed inset-0 z-50 hidden bg-slate-950/60 opacity-0 backdrop-blur-sm transition-opacity duration-300"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Bank Import Modal -->
+    <div
+      id="bank-import-panel"
+      class="pointer-events-none fixed inset-0 z-50 flex hidden items-end justify-center sm:items-center sm:p-4"
+    >
+      <div
+        class="pointer-events-auto flex max-h-[90vh] w-full translate-y-full transform flex-col overflow-hidden rounded-t-3xl bg-slate-900 border border-white/10 opacity-0 shadow-2xl transition-all duration-300 sm:max-w-lg sm:translate-y-10 sm:scale-95 sm:rounded-3xl"
+      >
+        <div class="flex shrink-0 items-center justify-between border-b border-white/5 bg-slate-950/50 p-5">
+          <h3 class="text-md font-bold text-slate-100" id="bank-import-title">Import from Bank Statement</h3>
+          <button
+            onclick="closeBankImport()"
+            class="rounded-lg bg-white/5 p-2 text-slate-400 transition-colors hover:text-slate-200"
+          >
+            <span class="iconify h-5 w-5" data-icon="ph:x-bold"></span>
+          </button>
+        </div>
+
+        <div class="overflow-y-auto bg-slate-900 p-5" style="max-height: 70vh;">
+          <!-- Step 1: Upload -->
+          <div id="bank-step-1">
+            <p class="mb-4 text-xs text-slate-400">
+              Upload a CSV file exported from your bank or card statement. We'll identify SaaS charges and billing periods.
+            </p>
+            <label
+              class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-white/5 bg-slate-950/30 py-8 transition-colors hover:bg-slate-950/50"
+            >
+              <span class="iconify h-10 w-10 text-purple-500" data-icon="ph:file-csv-bold"></span>
+              <span class="text-sm font-semibold text-slate-300">Select statement CSV file</span>
+              <span class="text-[10px] text-slate-500">or drag & drop here</span>
+              <input type="file" accept=".csv" onchange="handleBankCSV(event)" class="hidden" id="bank-csv-input" />
+            </label>
+          </div>
+
+          <!-- Step 2: Map Columns -->
+          <div id="bank-step-2" class="hidden">
+            <p class="mb-4 text-xs text-slate-400">
+              We parsed <span id="csv-row-count" class="font-semibold text-white">0</span> transactions. Align standard columns below:
+            </p>
+            <div class="space-y-3">
+              <div>
+                <label class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Date Column</label>
+                <select id="map-date" class="w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-xs text-slate-200 focus:outline-none"></select>
+              </div>
+              <div>
+                <label class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Merchant/Description Column</label>
+                <select id="map-description" class="w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-xs text-slate-200 focus:outline-none"></select>
+              </div>
+              <div>
+                <label class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Transaction Amount Column</label>
+                <select id="map-amount" class="w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-xs text-slate-200 focus:outline-none"></select>
+              </div>
+            </div>
+            <div class="mt-4 rounded-xl bg-slate-950/30 p-3 border border-white/5">
+              <div class="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Mapped Preview</div>
+              <div id="csv-preview" class="space-y-1 text-xs text-slate-400"></div>
+            </div>
+            <button
+              onclick="detectRecurring()"
+              class="mt-4 w-full rounded-xl bg-purple-600 hover:bg-purple-500 py-3 font-bold text-white transition-colors"
+            >
+              Detect SaaS Invoices
+            </button>
+          </div>
+
+          <!-- Step 3: Review Detected -->
+          <div id="bank-step-3" class="hidden">
+            <p class="mb-4 text-xs text-slate-400">
+              Detected <span id="detected-count" class="font-semibold text-white">0</span> recurring services. Choose items to import:
+            </p>
+            <div id="detected-list" class="space-y-2"></div>
+            <div id="no-detected" class="hidden py-8 text-center">
+              <span class="iconify mx-auto h-12 w-12 text-slate-600" data-icon="ph:magnifying-glass-bold"></span>
+              <p class="mt-2 text-sm text-slate-400">No recurring items identified</p>
+              <p class="text-xs text-slate-500">Try selecting manual items below</p>
+            </div>
+
+            <div class="mt-5 border-t border-white/5 pt-4">
+              <button
+                onclick="toggleOtherTransactions()"
+                class="flex w-full items-center justify-between text-left"
+                id="other-transactions-toggle"
+              >
+                <div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Manual Selection</div>
+                  <div class="text-xs text-slate-400">View <span id="other-count" class="text-white font-medium">0</span> additional transactions</div>
+                </div>
+                <span class="iconify h-5 w-5 text-slate-500 transition-transform" data-icon="ph:caret-down-bold" id="other-caret"></span>
+              </button>
+              <div id="other-transactions" class="mt-3 hidden">
+                <input
+                  type="text"
+                  placeholder="Filter transactions..."
+                  oninput="filterOtherTransactions(this.value)"
+                  class="mb-3 w-full rounded-lg border border-white/5 bg-slate-950/50 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none"
+                />
+                <div id="other-list" class="max-h-48 space-y-1.5 overflow-y-auto"></div>
+              </div>
+            </div>
+
+            <button
+              onclick="addSelectedSubscriptions()"
+              id="add-selected-btn"
+              class="mt-4 w-full rounded-xl bg-purple-600 hover:bg-purple-500 py-3 font-bold text-white transition-colors"
+            >
+              Add Selected
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plaid Bank Sync Modal -->
+    <div
+      id="plaid-backdrop"
+      class="fixed inset-0 z-50 hidden bg-slate-950/60 opacity-0 backdrop-blur-sm transition-opacity duration-300"
+      aria-hidden="true"
+    ></div>
+    <div
+      id="plaid-panel"
+      class="pointer-events-none fixed inset-0 z-50 flex hidden items-end justify-center sm:items-center sm:p-4"
+    >
+      <div
+        class="pointer-events-auto flex max-h-[90vh] w-full translate-y-full transform flex-col overflow-hidden rounded-t-3xl bg-slate-900 border border-white/10 opacity-0 shadow-2xl transition-all duration-300 sm:max-w-md sm:translate-y-10 sm:scale-95 sm:rounded-3xl"
+      >
+        <div class="flex shrink-0 items-center justify-between border-b border-white/5 bg-slate-950/50 p-5">
+          <div class="flex items-center gap-2">
+            <span class="iconify text-emerald-400 h-5 w-5 animate-pulse" data-icon="ph:swap-bold"></span>
+            <h3 class="text-md font-bold text-slate-100" id="plaid-modal-title">Link Bank via Plaid</h3>
+          </div>
+          <button
+            onclick="closePlaidSync()"
+            class="rounded-lg bg-white/5 p-2 text-slate-400 transition-colors hover:text-slate-200"
+          >
+            <span class="iconify h-5 w-5" data-icon="ph:x-bold"></span>
+          </button>
+        </div>
+
+        <div class="overflow-y-auto bg-slate-900 p-6 space-y-4" style="max-height: 70vh;">
+          <!-- Step 1: Select Bank -->
+          <div id="plaid-step-1" class="space-y-4">
+            <p class="text-xs text-slate-400">
+              Select your institution to connect feed and synchronize invoices:
+            </p>
+            <div class="grid grid-cols-1 gap-2.5">
+              <button onclick="selectPlaidBank('Silicon Valley Bank', 'svb')" class="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-slate-950/20 hover:bg-slate-950/50 transition-all text-left group">
+                <div class="flex items-center gap-3">
+                  <div class="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-xs shrink-0">SVB</div>
+                  <div>
+                    <div class="text-xs font-bold text-slate-200 group-hover:text-white transition-colors">Silicon Valley Bank</div>
+                    <div class="text-[9px] text-slate-500">Corporate & Venture accounts</div>
+                  </div>
+                </div>
+                <span class="iconify text-slate-500 h-4 w-4" data-icon="ph:caret-right-bold"></span>
+              </button>
+
+              <button onclick="selectPlaidBank('Mercury Bank', 'mercury')" class="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-slate-950/20 hover:bg-slate-950/50 transition-all text-left group">
+                <div class="flex items-center gap-3">
+                  <div class="h-8 w-8 rounded-lg bg-black flex items-center justify-center font-black text-white text-xs border border-white/10 shrink-0">M</div>
+                  <div>
+                    <div class="text-xs font-bold text-slate-200 group-hover:text-white transition-colors">Mercury Bank</div>
+                    <div class="text-[9px] text-slate-500">Startup checking & treasury</div>
+                  </div>
+                </div>
+                <span class="iconify text-slate-500 h-4 w-4" data-icon="ph:caret-right-bold"></span>
+              </button>
+
+              <button onclick="selectPlaidBank('Brex Corporate Card', 'brex')" class="flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-slate-950/20 hover:bg-slate-950/50 transition-all text-left group">
+                <div class="flex items-center gap-3">
+                  <div class="h-8 w-8 rounded-lg bg-orange-600 flex items-center justify-center font-black text-white text-xs shrink-0">B</div>
+                  <div>
+                    <div class="text-xs font-bold text-slate-200 group-hover:text-white transition-colors">Brex Card</div>
+                    <div class="text-[9px] text-slate-500">Corporate card rewards ledger</div>
+                  </div>
+                </div>
+                <span class="iconify text-slate-500 h-4 w-4" data-icon="ph:caret-right-bold"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Credentials Form -->
+          <div id="plaid-step-2" class="hidden space-y-4">
+            <div class="p-3 rounded-xl bg-slate-950/25 border border-white/5 flex items-center gap-3">
+              <div id="plaid-selected-icon" class="h-7 w-7 rounded flex items-center justify-center font-black text-white text-xs shrink-0"></div>
+              <div>
+                <div class="text-xs font-bold text-slate-200" id="plaid-selected-name">Institution</div>
+                <div class="text-[9px] text-slate-500">Secure connection via Plaid API</div>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="mb-1 block text-[9px] font-bold uppercase tracking-wider text-slate-500">Username / Client ID</label>
+                <input type="text" id="plaid-username" placeholder="enter username" class="w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-xs text-slate-100 placeholder:text-slate-700 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30" />
+              </div>
+              <div>
+                <label class="mb-1 block text-[9px] font-bold uppercase tracking-wider text-slate-500">Password / API Secret</label>
+                <input type="password" id="plaid-password" placeholder="••••••••" class="w-full rounded-xl border border-white/5 bg-slate-950/50 p-3 text-xs text-slate-100 placeholder:text-slate-700 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30" />
+              </div>
+            </div>
+            <button onclick="submitPlaidConnect()" class="w-full rounded-xl bg-purple-600 hover:bg-purple-500 py-3 font-bold text-white transition-colors text-xs uppercase tracking-wider">
+              Authorize Connection
+            </button>
+          </div>
+
+          <!-- Step 3: Loading Sync -->
+          <div id="plaid-step-3" class="hidden py-8 flex flex-col items-center justify-center space-y-4">
+            <div class="relative">
+              <div class="h-16 w-16 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span class="iconify text-purple-400 h-6 w-6 animate-pulse" data-icon="ph:bank-bold"></span>
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-xs font-bold text-slate-200">Synchronizing Financial Feeds...</div>
+              <div class="text-[9px] text-slate-500 mt-1">Downloading transaction records & classifying merchants</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Scenario Comparison Modal Backdrop -->
+    <div
+      id="compare-backdrop"
+      class="fixed inset-0 z-50 hidden bg-slate-950/60 opacity-0 backdrop-blur-sm transition-opacity duration-300"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Scenario Comparison Modal -->
+    <div
+      id="compare-panel"
+      class="pointer-events-none fixed inset-0 z-50 flex hidden items-end justify-center sm:items-center sm:p-4"
+    >
+      <div
+        class="pointer-events-auto flex max-h-[85vh] w-full translate-y-full transform flex-col overflow-hidden rounded-t-3xl bg-slate-900 border border-white/10 opacity-0 shadow-2xl transition-all duration-300 sm:max-w-2xl sm:translate-y-10 sm:scale-95 sm:rounded-3xl"
+      >
+        <div class="flex shrink-0 items-center justify-between border-b border-white/5 bg-slate-950/50 p-5">
+          <h3 class="text-md font-bold text-slate-100 flex items-center gap-2">
+            <span class="iconify text-purple-400" data-icon="ph:scales-bold"></span>
+            A/B Scenario Comparison Matrix
+          </h3>
+          <button
+            onclick="closeCompareDrawer()"
+            class="rounded-lg bg-white/5 p-2 text-slate-400 transition-colors hover:text-slate-200"
+          >
+            <span class="iconify h-5 w-5" data-icon="ph:x-bold"></span>
+          </button>
+        </div>
+
+        <div class="overflow-y-auto bg-slate-900 p-6">
+          <p class="text-xs text-slate-400 mb-4">
+            Compare saved simulation models side-by-side to understand runway deltas, cost concentrations, and risk profiles.
+          </p>
+          <div class="overflow-x-auto rounded-xl border border-white/5 bg-slate-950/20">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-white/5 bg-slate-950/50 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  <th class="p-3">Metric</th>
+                  <th class="p-3 bg-purple-500/10">Active (Current)</th>
+                  <!-- Dynamic headers will be injected here -->
+                </tr>
+              </thead>
+              <tbody id="compare-matrix-body" class="divide-y divide-white/5 font-mono text-slate-300">
+                <!-- Dynamic rows will be injected here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CFO Print Report Container (Hidden in screen mode, visible in print) -->
+    <div id="cfo-print-report" class="hidden print:block p-8 bg-white text-slate-900 font-sans min-h-screen">
+      <div class="border-b-2 border-slate-900 pb-4 mb-6">
+        <div class="flex justify-between items-end">
+          <div>
+            <h1 class="text-2xl font-extrabold uppercase tracking-tight text-slate-900">RunwayMap CFO Summary Report</h1>
+            <p class="text-xs text-slate-500 font-bold mt-1">STARTUP FINANCIAL INTELLIGENCE MATRIX</p>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-black text-slate-900" id="print-date">June 9, 2026</div>
+            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Report Date</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overview Statistics Grid -->
+      <div class="grid grid-cols-4 gap-4 mb-6 font-mono">
+        <div class="border border-slate-200 p-3 rounded-lg">
+          <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 font-sans">Monthly Burn</div>
+          <div class="text-lg font-black text-slate-900 mt-1" id="print-burn">$0</div>
+        </div>
+        <div class="border border-slate-200 p-3 rounded-lg">
+          <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 font-sans">Runway Months</div>
+          <div class="text-lg font-black text-slate-900 mt-1" id="print-runway">0.0 mo</div>
+        </div>
+        <div class="border border-slate-200 p-3 rounded-lg">
+          <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 font-sans">Risk Level</div>
+          <div class="text-lg font-black text-slate-900 mt-1" id="print-risk">0%</div>
+        </div>
+        <div class="border border-slate-200 p-3 rounded-lg">
+          <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 font-sans">Total Runway Cash</div>
+          <div class="text-lg font-black text-slate-900 mt-1" id="print-cash">$0</div>
+        </div>
+      </div>
+
+      <!-- Top SaaS Cost Drivers -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div>
+          <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2 font-sans border-b border-slate-200 pb-1">Top Cost Drivers</h3>
+          <div id="print-drivers" class="space-y-1 text-xs"></div>
+        </div>
+        <div>
+          <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2 font-sans border-b border-slate-200 pb-1">Department Share</h3>
+          <div id="print-departments" class="space-y-1 text-xs"></div>
+        </div>
+      </div>
+
+      <!-- Saved Scenarios Comparison -->
+      <div class="mb-6">
+        <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2 font-sans border-b border-slate-200 pb-1">A/B Scenario Comparisons</h3>
+        <div class="border border-slate-200 rounded-lg overflow-hidden mt-2">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[9px] font-black uppercase tracking-wider text-slate-500">
+                <th class="p-2.5">Scenario Name</th>
+                <th class="p-2.5">Monthly Burn</th>
+                <th class="p-2.5">Runway Months</th>
+                <th class="p-2.5">Cash Injected</th>
+                <th class="p-2.5">Hiring Additions</th>
+                <th class="p-2.5">Risk Score</th>
+              </tr>
+            </thead>
+            <tbody id="print-scenarios-body" class="divide-y divide-slate-100 font-mono text-slate-800">
+              <!-- Dynamic rows will be injected -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SaaS Expense Catalog Matrix -->
+      <div>
+        <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2 font-sans border-b border-slate-200 pb-1">Active SaaS Expense Matrix</h3>
+        <div class="border border-slate-200 rounded-lg overflow-hidden mt-2">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[9px] font-black uppercase tracking-wider text-slate-500">
+                <th class="p-2.5">Vendor Name</th>
+                <th class="p-2.5">Category</th>
+                <th class="p-2.5">Owner</th>
+                <th class="p-2.5">Department</th>
+                <th class="p-2.5">Billing Cycle</th>
+                <th class="p-2.5 text-right">Monthly Cost</th>
+              </tr>
+            </thead>
+            <tbody id="print-matrix-body" class="divide-y divide-slate-100 text-slate-800">
+              <!-- Dynamic rows will be injected -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-12 text-center text-[8px] text-slate-400 font-bold uppercase tracking-widest border-t border-slate-100 pt-4">
+        Report compiled by RunwayMap Decision Engine. Confidential startup document.
+      </div>
+    </div>
+
+    <!-- Footer Credits -->
+    <footer class="text-center py-8 text-xs text-slate-600 border-t border-white/5 mt-12">
+      <div>RunwayMap &copy; 2026. Keep your SaaS cash burn under control.</div>
+      <div class="mt-1 text-[10px] text-slate-700">Rates provided by Exchange Rate API.</div>
+    </footer>
+
+    <!-- Script imports -->
+    <script src="js/presets.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/rates.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/treemap.js"></script>
+    <script src="js/beeswarm.js"></script>
+    <script src="js/circlepack.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/bank-import.js"></script>
+    <script src="js/tour.js"></script>
+    <script src="js/plaid-sync.js"></script>
+  </body>
+</html>
