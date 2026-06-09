@@ -877,12 +877,32 @@ input:checked + .slider:before {
 }
 
 /* Claude Code Theme Monospace retro twist */
+.theme-claude, .theme-claude * {
+  font-family: 'JetBrains Mono', Courier, monospace !important;
+}
+
 .theme-claude body {
-  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, Courier, monospace !important;
+  background-color: #f6f1e7 !important;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px) !important;
+  background-size: 100% 24px !important;
+  animation: none !important;
 }
 
 .theme-claude .glass-card {
+  background-color: #faf8f4 !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 3px double rgba(138, 115, 85, 0.35) !important;
+  box-shadow: none !important;
   border-radius: 8px !important;
+}
+
+.theme-claude .glow-purple,
+.theme-claude .glow-cyan,
+.theme-claude .glow-orange,
+.theme-claude .shadow-glow {
+  box-shadow: none !important;
 }
 
 .theme-claude .treemap-container, 
@@ -890,6 +910,9 @@ input:checked + .slider:before {
 .theme-claude #beeswarm-container, 
 .theme-claude #circlepack-container {
   border-radius: 8px !important;
+  border: 1px solid rgba(60, 50, 40, 0.15) !important;
+  background: #faf8f4 !important;
+  box-shadow: none !important;
 }
 
 .theme-claude input, 

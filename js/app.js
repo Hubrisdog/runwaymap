@@ -874,8 +874,8 @@ function renderList() {
       renewalPill = '<span class="text-[9px] font-semibold text-slate-500 bg-slate-500/10 px-1.5 py-0.5 rounded">In ' + renewal.days + 'd</span>';
     }
 
-    const ownerText = sub.owner ? `<span class="opacity-75 font-semibold">👤 ${sub.owner}</span>` : '';
-    const fundingText = sub.funding ? `<span class="opacity-75 font-semibold">💳 ${sub.funding}</span>` : '';
+    const ownerText = sub.owner ? `<span class="opacity-75 font-semibold inline-flex items-center gap-0.5"><span class="iconify" data-icon="ph:user-bold" style="display:inline-block; width:12px; height:12px; margin-right: 2px;"></span>${sub.owner}</span>` : '';
+    const fundingText = sub.funding ? `<span class="opacity-75 font-semibold inline-flex items-center gap-0.5"><span class="iconify" data-icon="ph:credit-card-bold" style="display:inline-block; width:12px; height:12px; margin-right: 2px;"></span>${sub.funding}</span>` : '';
     const metaSpacer = (ownerText && fundingText) ? ' · ' : '';
 
     html += '<div class="sub-item-fade flex items-center justify-between p-3 bg-slate-950/20 border border-white/5 border-l-2 rounded-xl hover:border-white/10 hover:translate-x-1 transition-all duration-200" style="border-left-color: ' + color.accent + '; animation-delay: ' + delay + 'ms">';
@@ -1751,7 +1751,7 @@ function renderAlertSim() {
         <div class="p-4 space-y-3">
           <div>
             <h2 class="text-xs font-black text-white flex items-center gap-1.5">
-              ⚠️ Renewal Alert: ${alertSubs.length} subscriptions renewing soon
+              Renewal Alert: ${alertSubs.length} subscriptions renewing soon
             </h2>
             <p class="text-[9px] text-slate-400 mt-1 leading-normal">
               Never miss a renewal. We found these upcoming charges scheduled for the next 2 days:
@@ -1786,7 +1786,7 @@ function renderAlertSim() {
               <span class="text-[9px] text-slate-500 font-bold">now</span>
             </div>
             <p class="text-[10px] font-bold text-slate-300 mt-0.5 leading-snug">
-              ⚠️ ${alertSubs.length} SaaS renewals in 2 days: ${subNames}. Total charge: ${formatCurrencyShort(totalCostVal)}.
+              ${alertSubs.length} SaaS renewals in 2 days: ${subNames}. Total charge: ${formatCurrencyShort(totalCostVal)}.
             </p>
             <div class="flex gap-2 mt-2.5">
               <button class="bg-white/5 hover:bg-white/10 text-slate-300 text-[9px] font-bold px-2.5 py-1 rounded border border-white/5 transition-colors">Snooze</button>
@@ -1821,7 +1821,7 @@ function renderAlertSim() {
             </div>
             <div class="border-l-4 border-amber-500 pl-3 py-0.5 space-y-1.5">
               <div class="font-black text-slate-200 text-[11px] flex items-center gap-1 font-sans">
-                ⚠️ ${alertSubs.length} Subscriptions Renewing Soon (2-day notice)
+                ${alertSubs.length} Subscriptions Renewing Soon (2-day notice)
               </div>
               <p class="text-slate-400 text-[10px] leading-normal font-sans">
                 We detected upcoming charges on your linked cards. Make sure balance is sufficient:
@@ -2265,7 +2265,7 @@ function getScenarioBurn(scenario) {
   return saasBurn + payroll;
 }
 
-// 📈 Visual Runway Cash Flow Chart Renderer
+// Visual Runway Cash Flow Chart Renderer
 function renderCashFlowChart() {
   const container = document.getElementById("cash-flow-svg-container");
   if (!container) return;
@@ -2392,7 +2392,7 @@ function formatOriginalCurrencyFormat(amount) {
   return curr.symbol + amount.toFixed(0);
 }
 
-// 💡 Cost-Saving Insights Engine Auditor
+// Cost-Saving Insights Engine Auditor
 function auditSaaSStack() {
   const container = document.getElementById("hub-savings-tip");
   const valueEl = document.getElementById("hub-savings-value");
@@ -2557,7 +2557,7 @@ function applyInsightOptimization(idx) {
   renderActiveView();
 }
 
-// 👥 Role-Based Views Management
+// Role-Based Views Management
 function toggleRoleMenu() {
   const menu = document.getElementById("role-menu");
   if (!menu) return;

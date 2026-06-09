@@ -2,14 +2,14 @@
 
 const basicTourSteps = [
   {
-    title: "👋 Welcome to RunwayMap (Basic Mode)!",
+    title: "Welcome to RunwayMap (Basic Mode)!",
     text: "Before you hire, subscribe, or cut costs, see exactly how it affects your runway. RunwayMap is an interactive financial cockpit that helps you predict how spending decisions affect your runway. Let's take a quick walkthrough of the core features.",
     target: null,
     position: "center",
     action: () => {}
   },
   {
-    title: "🎨 Theme & Currency Switcher",
+    title: "Theme & Currency Switcher",
     text: "Adjust your workspace settings:<ul><li><b>Theme Switcher:</b> Toggle between Space Obsidian, Alabaster Light, and Analyst Mode.</li><li><b>Currency Selector:</b> Convert all metrics dynamically.</li></ul>",
     target: "#theme-btn",
     position: "bottom",
@@ -18,7 +18,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "📊 Core KPI Scorecards",
+    title: "Core KPI Scorecards",
     text: "Monitor your primary metrics:<ul><li><b>Monthly Burn:</b> Combined SaaS and payroll expenses.</li><li><b>Runway Remaining:</b> Months of cash runway.</li><li><b>Financial Health Score:</b> Multi-factor health status rating.</li><li><b>Top Cost Drivers:</b> Quick list of your highest expenses.</li></ul>",
     target: "#scorecards-grid",
     position: "bottom",
@@ -27,7 +27,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "⚙️ What-If Simulation Engine",
+    title: "What-If Simulation Engine",
     text: "Test capital decisions in real-time:<ul><li><b>Starting Cash:</b> Set your runway capital baseline.</li><li><b>Scale Team Seats:</b> Simulates scaling seat-based SaaS subscriptions as your team grows.</li></ul>",
     target: "#modeling-sliders-card",
     position: "right",
@@ -36,7 +36,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "⚡ Startup Stack Templates",
+    title: "Startup Stack Templates",
     text: "Load baseline SaaS configurations instantly (Solo Founder, AI Startup, Dev Agency templates).",
     target: "#startup-templates-card",
     position: "right",
@@ -45,7 +45,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "💳 Active SaaS Stacks",
+    title: "Active SaaS Stacks",
     text: "This sidebar displays your active SaaS costs with live renewal countdown pills. Click **Add Item** or any listed item to edit its billing cycle, renewal date, and owner.",
     target: "#active-saas-sidebar-card",
     position: "right",
@@ -54,7 +54,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "➕ Add or Edit SaaS Expense",
+    title: "Add or Edit SaaS Expense",
     text: "Customize individual tools, prices, billing cycles (Weekly, Monthly, Yearly), and toggle seat-based scaling.",
     target: "#modal-panel > div",
     position: "right",
@@ -63,7 +63,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "🛍️ SaaS Catalog Browser",
+    title: "SaaS Catalog Browser",
     text: "Browse through pre-loaded industry standards. Click any vendor (like Slack, GitHub, or Snowflake) to pre-populate name, logo, category, and color in the editor.",
     target: "#presets-panel > div",
     position: "right",
@@ -73,7 +73,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "📈 Operations Hub: Budget & Analytics",
+    title: "Operations Hub: Budget & Analytics",
     text: "In the **Analytics** tab:<ul><li><b>Burn Budget Limit:</b> Drag the slider to set a global monthly threshold.</li><li><b>Category Share:</b> Displays breakdown of your SaaS spend.</li></ul>",
     target: "#operations-hub-card",
     position: "top",
@@ -84,7 +84,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "📥 Export High-Fidelity Reports",
+    title: "Export High-Fidelity Reports",
     text: "Export your cockpit summaries:<ul><li><b>Export Chart:</b> Download the active Treemap as a PNG.</li><li><b>Export CFO PDF:</b> Generate a clean, boardroom-ready vector PDF report.</li></ul>",
     target: "#theme-btn",
     position: "bottom",
@@ -93,7 +93,7 @@ const basicTourSteps = [
     }
   },
   {
-    title: "🚀 Basic Tour Complete!",
+    title: "Basic Tour Complete!",
     text: "You've completed the Basic Mode walkthrough. Toggle **Pro Mode** in the header anytime to unlock scenario saves, A/B comparison matrixes, Plaid bank syncs, renewal calendars, Slack webhook simulators, and department budget caps!",
     target: null,
     position: "center",
@@ -103,14 +103,14 @@ const basicTourSteps = [
 
 const proTourSteps = [
   {
-    title: "👋 Welcome to RunwayMap (Pro Mode)!",
+    title: "Welcome to RunwayMap (Pro Mode)!",
     text: "Before you hire, subscribe, or cut costs, see exactly how it affects your runway. RunwayMap is an interactive financial cockpit that helps you predict how spending decisions affect your runway. Let's explore the advanced forecasting tools.",
     target: null,
     position: "center",
     action: () => {}
   },
   {
-    title: "🎨 Theme & Currency Switcher",
+    title: "Theme & Currency Switcher",
     text: "Use these controls to adjust theme layouts (Obsidian, Alabaster, and monospaced Analyst Mode) and dynamically convert currencies.",
     target: "#theme-btn",
     position: "bottom",
@@ -119,7 +119,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "📊 Core KPI Scorecards",
+    title: "Core KPI Scorecards",
     text: "Monitor monthly burn, runway, Financial Health (out of 100), and top cost drivers. Monospace math traces are displayed here under Analyst Mode.",
     target: "#scorecards-grid",
     position: "bottom",
@@ -128,7 +128,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "⚙️ What-If Simulation Engine",
+    title: "What-If Simulation Engine",
     text: "Model capital decisions in real-time. Adjust **Starting Cash**, **Scale Team Seats**, **Hiring Pipelines**, and **API / Infrastructure usage surges** to see direct runway months gains or losses.",
     target: "#modeling-sliders-card",
     position: "right",
@@ -137,7 +137,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "💾 A/B Simulation Scenarios",
+    title: "A/B Simulation Scenarios",
     text: "Save scenario slider states (e.g. 'Lean Survival Model' or 'Venture Expansion') to compare different business strategies.",
     target: "#scenario-name-input",
     position: "right",
@@ -146,7 +146,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "📊 Scenario Comparison Matrix",
+    title: "Scenario Comparison Matrix",
     text: "Clicking <b>Compare Matrix</b> opens a detailed table comparing starting cash, seats, hiring, surges, and positive/negative deltas for runway, burn, and capital efficiency.",
     target: "#compare-panel > div",
     position: "left",
@@ -155,7 +155,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "⚡ Startup Stack Templates",
+    title: "Startup Stack Templates",
     text: "Load baseline SaaS configurations instantly (Solo Founder, AI Startup, Dev Agency templates).",
     target: "#startup-templates-card",
     position: "right",
@@ -165,7 +165,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "💳 Active SaaS Stacks",
+    title: "Active SaaS Stacks",
     text: "This sidebar displays active SaaS costs with owner tags, renewal countdown pills, card sources, and Plaid statements sync buttons.",
     target: "#active-saas-sidebar-card",
     position: "right",
@@ -174,7 +174,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "➕ Add or Edit SaaS Expense",
+    title: "Add or Edit SaaS Expense",
     text: "Add custom tools. Assign specific owners, corporate credit cards, departments, billing cycles, and toggle seat-based scaling.",
     target: "#modal-panel > div",
     position: "right",
@@ -183,7 +183,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "🏦 Automated Bank CSV Importer",
+    title: "Automated Bank CSV Importer",
     text: "Drag and drop bank statements. RunwayMap runs transactions through a pattern matching classifier (e.g. 'AMZN' &rarr; AWS) to auto-fill categories, domains, and colors.",
     target: "#bank-import-panel > div",
     position: "right",
@@ -193,7 +193,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "📈 Operations Hub: Burn Limit & Analytics",
+    title: "Operations Hub: Burn Limit & Analytics",
     text: "Set a global monthly burn threshold, review spent warning triggers, and explore spent share by category.",
     target: "#operations-hub-card",
     position: "top",
@@ -204,7 +204,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "📅 Operations Hub: Renewal Calendar",
+    title: "Operations Hub: Renewal Calendar",
     text: "In the **Calendar** tab, view a visual renewal heatmap. Highlights calendar cash flow collisions if multiple renewals land on the same day.",
     target: "#operations-hub-card",
     position: "top",
@@ -214,7 +214,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "🔔 Operations Hub: Smart Alerts Simulator",
+    title: "Operations Hub: Smart Alerts Simulator",
     text: "Preview automated notifications (Email, Mobile Push, and Slack Webhook layouts) sent 2 days before charge dates.",
     target: "#operations-hub-card",
     position: "top",
@@ -224,7 +224,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "🏢 Operations Hub: Department Budget Caps",
+    title: "Operations Hub: Department Budget Caps",
     text: "Set budget caps for each department (Engineering, Product, Marketing, Sales, Operations). Red progress bars indicate budget cap overruns.",
     target: "#operations-hub-card",
     position: "top",
@@ -234,7 +234,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "🛍️ SaaS Catalog Browser",
+    title: "SaaS Catalog Browser",
     text: "Quick-add SaaS presets from a searchable catalog (Slack, GitHub, Snowflake, etc.).",
     target: "#presets-panel > div",
     position: "right",
@@ -243,7 +243,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "📥 Export High-Fidelity Reports",
+    title: "Export High-Fidelity Reports",
     text: "Export active visualizations (Treemap, Circlepack, Beeswarm) as PNGs, or generate a high-fidelity vector PDF print report.",
     target: "#theme-btn",
     position: "bottom",
@@ -253,7 +253,7 @@ const proTourSteps = [
     }
   },
   {
-    title: "🚀 You're Ready to Roll!",
+    title: "You're Ready to Roll!",
     text: "That's it! You have walked through every advanced section of the cockpit. Go ahead and simulate spending decisions to protect your startup's runway!",
     target: null,
     position: "center",
