@@ -1502,3 +1502,32 @@ html.theme-dark::before {
   color: #5c4e43 !important;
   font-family: 'JetBrains Mono', Courier, monospace;
 }
+
+/* Drag and Drop Card Reordering Styles */
+.drag-handle {
+  cursor: grab;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+.theme-light .drag-handle {
+  color: #94a3b8;
+}
+.theme-light .drag-handle:hover {
+  color: #475569;
+}
+.theme-claude .drag-handle {
+  color: rgba(60, 50, 40, 0.4) !important;
+}
+.theme-claude .drag-handle:hover {
+  color: rgba(60, 50, 40, 0.8) !important;
+}
+.glass-card.opacity-50 {
+  opacity: 0.45 !important;
+  border: 2px dashed var(--border-active) !important;
+  box-shadow: none !important;
+}

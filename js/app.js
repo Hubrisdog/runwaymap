@@ -2702,6 +2702,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Restore dashboard mode from localStorage
   const savedMode = localStorage.getItem("runwaymap_mode") || "basic";
   setDashboardMode(savedMode, true);
+
+  // Initialize dynamic card reordering
+  initCardReordering();
 });
 
 // Helper function to toggle card collapse and save state in localStorage
@@ -2905,4 +2908,91 @@ ${distributionLines}
 --------------------------------------------------`;
 
   contentEl.innerHTML = `<pre class="whitespace-pre-wrap leading-relaxed">${reportText}</pre>`;
+}
+
+// Dynamic Card Reordering System
+function initCardReordering() {
+  const container = document.getElementById("dashboard-cards-container");
+  if (!container) return;
+
+  const cards = container.querySelectorAll(".glass-card[id]");
+  
+  cards.forEach(card => {
+    const header = card.querySelector("h3");
+    if (!header) return;
+
+    // Find or create the drag handle inside the action group
+    const actionGroup = header.querySelector(".flex.items-center.gap-2");
+    if (actionGroup && !actionGroup.querySelector(".drag-handle")) {
+      const handle = document.createElement("div");
+      handle.className = "drag-handle cursor-grab text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center";
+      handle.title = "Drag to Reorder";
+      handle.innerHTML = '<span class="iconify h-4 w-4" data-icon="ph:dots-six-vertical-bold"></span>';
+      
+      // Toggle draggable state on mouse down/up on the handle to prevent accidental selection/input drag issues
+      handle.addEventListener("mousedown", () => {
+        card.setAttribute("draggable", "true");
+      });
+      handle.addEventListener("mouseup", () => {
+        card.setAttribute("draggable", "false");
+      });
+      
+      // Prepend to action buttons group
+      actionGroup.insertBefore(handle, actionGroup.firstChild);
+    }
+
+    card.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", card.id);
+      card.classList.add("opacity-50");
+    });
+
+    card.addEventListener("dragend", () => {
+      card.classList.remove("opacity-50");
+      card.setAttribute("draggable", "false");
+      saveCardOrder();
+    });
+
+    card.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      const draggingCard = container.querySelector(".opacity-50");
+      if (!draggingCard || draggingCard === card) return;
+
+      const bounding = card.getBoundingClientRect();
+      const offset = e.clientY - bounding.top - (bounding.height / 2);
+      
+      if (offset > 0) {
+        card.after(draggingCard);
+      } else {
+        card.before(draggingCard);
+      }
+    });
+  });
+
+  loadCardOrder();
+}
+
+function saveCardOrder() {
+  const container = document.getElementById("dashboard-cards-container");
+  if (!container) return;
+  const cards = container.querySelectorAll(".glass-card[id]");
+  const order = Array.from(cards).map(c => c.id);
+  localStorage.setItem("runwaymap_card_order", JSON.stringify(order));
+}
+
+function loadCardOrder() {
+  const container = document.getElementById("dashboard-cards-container");
+  if (!container) return;
+  const saved = localStorage.getItem("runwaymap_card_order");
+  if (!saved) return;
+  try {
+    const order = JSON.parse(saved);
+    order.forEach(id => {
+      const card = document.getElementById(id);
+      if (card && card.parentElement === container) {
+        container.appendChild(card);
+      }
+    });
+  } catch (e) {
+    console.error("Failed to load card order:", e);
+  }
 }
