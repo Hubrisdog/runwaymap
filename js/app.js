@@ -2660,7 +2660,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     "export-container",
     "cash-flow-chart-card",
     "operations-hub-card",
-    "optimization-recommendations-card"
+    "optimization-recommendations-card",
+    "analyst-commentary-card"
   ];
   collapsibleCards.forEach(cardId => {
     const card = document.getElementById(cardId);
@@ -2918,14 +2919,14 @@ function initCardReordering() {
   const cards = container.querySelectorAll(".glass-card[id]");
   
   cards.forEach(card => {
-    const header = card.querySelector("h3");
+    const header = card.querySelector("h3") || card.querySelector(".flex.items-center.justify-between");
     if (!header) return;
 
     // Find or create the drag handle inside the action group
-    const actionGroup = header.querySelector(".flex.items-center.gap-2");
-    if (actionGroup && !actionGroup.querySelector(".drag-handle")) {
+    const actionGroup = header.querySelector(".flex.items-center.gap-2") || header;
+    if (actionGroup && !card.querySelector(".drag-handle")) {
       const handle = document.createElement("div");
-      handle.className = "drag-handle cursor-grab text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center";
+      handle.className = "drag-handle cursor-grab text-slate-500 hover:text-slate-300 p-1 rounded transition-colors flex items-center justify-center mr-1";
       handle.title = "Drag to Reorder";
       handle.innerHTML = '<span class="iconify h-4 w-4" data-icon="ph:dots-six-vertical-bold"></span>';
       
@@ -2937,7 +2938,7 @@ function initCardReordering() {
         card.setAttribute("draggable", "false");
       });
       
-      // Prepend to action buttons group
+      // Prepend to action group
       actionGroup.insertBefore(handle, actionGroup.firstChild);
     }
 
